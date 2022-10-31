@@ -8,21 +8,28 @@ exports.index = function (req, res) {
 };
 
 exports.create = function (req, res, next) {
-  if (!req.body.name) {
+  if (!req.body.title) {
     return next(createError(400, "title is required"));
   }
-  if (!req.body.name) {
+  if (!req.body.author) {
     return next(createError(400, "author is required"));
   }
+  // READ
+  if (req.body.read !== true && req.body.read !== false) {
+    return next(createError(400, "(true/false) read is required"));
+  }
+
   booklist.push({
     id: idnumber,
-    title: req.body.name,
-    author: req.body.name,
-    read: req.body.name,
+    title: req.body.title,
+    author: req.body.author,
+    read: req.body.read,
   });
+
   res.send({ result: true });
   idnumber++;
 };
+
 exports.show = function (req, res, next) {
   const bookitem = booklist.find((book) => book.id == req.params.id);
   if (!bookitem) {
@@ -40,6 +47,12 @@ exports.delete = function (req, res, next) {
   res.send({ result: true });
 };
 
+// 3. The ability to remove books from the list.
+exports.deleteBooks = function (req, res, next) {
+  booklist = [];
+  res.send({ result: true });
+};
+
 exports.update = function (req, res, next) {
   const bookitem = booklist.find((book) => book.id == req.params.id);
   if (!req.body.name) {
@@ -53,9 +66,7 @@ exports.update = function (req, res, next) {
   }
   booklist = booklist.map((book) => {
     if (book.id == req.params.id) {
-      book.title = req.body.title;
-      book.author = req.body.author;
-      book.read = req.body.read;
+      book.name = req.body.name;
     }
     return book;
   });
