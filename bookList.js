@@ -18,7 +18,6 @@ exports.create = function (req, res, next) {
   if (req.body.read !== true && req.body.read !== false) {
     return next(createError(400, "(true/false) read is required"));
   }
-
   booklist.push({
     id: idnumber,
     title: req.body.title,
@@ -55,10 +54,10 @@ exports.deleteBooks = function (req, res, next) {
 
 exports.update = function (req, res, next) {
   const bookitem = booklist.find((book) => book.id == req.params.id);
-  if (!req.body.name) {
+  if (!req.body.title) {
     return next(createError(400, "title is required"));
   }
-  if (!req.body.name) {
+  if (!req.body.author) {
     return next(createError(400, "author is required"));
   }
   if (!bookitem) {
@@ -66,7 +65,8 @@ exports.update = function (req, res, next) {
   }
   booklist = booklist.map((book) => {
     if (book.id == req.params.id) {
-      book.name = req.body.name;
+      book.title = req.body.title;
+      book.author = req.body.author;
     }
     return book;
   });
