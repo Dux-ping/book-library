@@ -48,7 +48,6 @@ exports.title = function (req, res, next) {
   if (!bookitem) {
     return next(createError(404, "no book with that title"));
   }
-
   res.send(bookitem);
 };
 
