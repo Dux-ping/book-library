@@ -1,3 +1,4 @@
+const { request } = require("express");
 const createError = require("http-errors");
 
 let booklist = [];
@@ -34,6 +35,20 @@ exports.show = function (req, res, next) {
   if (!bookitem) {
     return next(createError(404, "no book with that id"));
   }
+  if (!bookitem) {
+    return next(createError(404, "no book with that title"));
+  }
+
+  res.send(bookitem);
+};
+
+exports.title = function (req, res, next) {
+  console.log(req.params.title);
+  const bookitem = booklist.find((book) => book.title == req.params.title);
+  if (!bookitem) {
+    return next(createError(404, "no book with that title"));
+  }
+
   res.send(bookitem);
 };
 
@@ -46,7 +61,7 @@ exports.delete = function (req, res, next) {
   res.send({ result: true });
 };
 
-// 3. The ability to remove books from the list.
+// 3. The ability to remove all books from the list.
 exports.deleteBooks = function (req, res, next) {
   booklist = [];
   res.send({ result: true });
