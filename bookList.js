@@ -1,88 +1,70 @@
-const { request } = require("express");
 const createError = require("http-errors");
+const { ObjectId } = require("mongodb");
 
-let booklist = [];
-let idnumber = 0;
+const { Book } = require("./books");
 
-exports.index = function (req, res) {
-  res.send(booklist);
+// Find BOOKS
+exports.index = async function (req, res) {
+  let books = await Book.find();
+  res.send(books);
 };
 
-exports.create = function (req, res, next) {
-  if (!req.body.title) {
-    return next(createError(400, "title is required"));
+// Create
+exports.create = async function (req, res, next) {
+  if (!req.body.title || !req.body.author) {
+    return next(createError(400, "title and author is required"));
   }
-  if (!req.body.author) {
-    return next(createError(400, "author is required"));
-  }
-  // READ
-  if (req.body.read !== true && req.body.read !== false) {
-    return next(createError(400, "(true/false) read is required"));
-  }
-  booklist.push({
-    id: idnumber,
+  const book = new Book({
     title: req.body.title,
     author: req.body.author,
-    read: req.body.read,
   });
-
-  res.send({ result: true });
-  idnumber++;
+  await book.save();
+  res.send(book);
 };
 
-exports.show = function (req, res, next) {
-  const bookitem = booklist.find((book) => book.id == req.params.id);
-  if (!bookitem) {
-    return next(createError(404, "no book with that id"));
+// Show
+exports.show = async function (req, res, next) {
+  const book = await Book.findOne({ _id: ObjectId(req.params.id) });
+  if (book) {
+    return res.send(book);
   }
-  if (!bookitem) {
-    return next(createError(404, "no book with that title"));
-  }
-
-  res.send(bookitem);
+  return next(createError(404, "no book with that id"));
 };
 
-exports.title = function (req, res, next) {
-  console.log(req.params.title);
-  const bookitem = booklist.find((book) => book.title == req.params.title);
-  if (!bookitem) {
-    return next(createError(404, "no book with that title"));
+// Title
+exports.title = async function (req, res, next) {
+  const book = await Book.findOne({ _id: ObjectId(req.params.id) });
+  if (book) {
+    return res.send(book);
   }
-  res.send(bookitem);
+  return next(createError(404, "no book with that title"));
 };
 
-exports.delete = function (req, res, next) {
-  const bookitem = booklist.find((book) => book.id == req.params.id);
-  if (!bookitem) {
-    return next(createError(404, "no book with that id"));
+// Delete
+exports.delete = async function (req, res, next) {
+  let status = await Book.deleteOne({ _id: ObjectId(req.params.id) });
+  if (status.deletedCount) {
+    return res.send({ result: true });
   }
-  booklist = booklist.filter((book) => book.id != req.params.id);
-  res.send({ result: true });
+  return next(createError(404, "no book with that id"));
 };
 
 // 3. The ability to remove all books from the list.
-exports.deleteBooks = function (req, res, next) {
-  booklist = [];
+exports.deleteBooks = async function (req, res, next) {
   res.send({ result: true });
 };
 
-exports.update = function (req, res, next) {
-  const bookitem = booklist.find((book) => book.id == req.params.id);
-  if (!req.body.title) {
-    return next(createError(400, "title is required"));
+exports.update = async function (req, res, next) {
+  if (!req.body.title && !req.body.author) {
+    return next(createError(400, "title and author is required"));
   }
-  if (!req.body.author) {
-    return next(createError(400, "author is required"));
+  let update = await Book.findOne({ _id: ObjectId(req.params.id) });
+  if (update) {
+    update.title = req.body.title || update.title;
+    update.author = req.body.author || update.author;
+
+    await update.save();
+    return res.send(update);
   }
-  if (!bookitem) {
-    return next(createError(404, "no book with that id"));
-  }
-  booklist = booklist.map((book) => {
-    if (book.id == req.params.id) {
-      book.title = req.body.title;
-      book.author = req.body.author;
-    }
-    return book;
-  });
-  res.send({ result: true });
+  return next(createError(404, "no book with that id"));
 };
